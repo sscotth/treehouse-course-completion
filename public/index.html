@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Treehouse Progress</title>
+  <style>
+    body { box-sizing: border-box; }
+
+    .user-card, img {
+      box-shadow: 0px 2px 5px 0 rgba(0,0,0,0.25);
+    }
+
+    .user-card {
+      margin: 8px;
+      padding: 20px;
+      border-radius: 2px;
+      width: 200px;
+      text-align: center;
+      float: left;
+    }
+
+    img {
+      border-radius: 100px;
+      height: 100px;
+      width: 100px;
+      border: 5px solid #eee;
+    }
+
+    .info {
+      font-family: Georgia;
+    }
+
+    .name {
+      font-family: Georgia;
+      font-size: 24px;
+      margin: 15px;
+    }
+
+    a {
+      text-decoration: none;
+      color: #999;
+    }
+
+    .progress {
+      color: #25af53;
+      font-size: 48px;
+    }
+  </style>
+</head>
+<body>
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <div class="container">
+    <h1>Treehouse Progress</h1>
+    <div id="cards"></div>
+  </div>
+
+  <script src="//cdn.jsdelivr.net/lodash/2.4.1/lodash.min.js"></script>
+  <script>
+    var students = {};
+
+    getJSON('https://yspuku7qvh9u4cr3.firebaseio.com/c8-students.json' ,function(data){
+      students = data;
+      treehouseIds = _(data).mapValues(function(student){
+        return student.treehouse;
+      })
+      .each(function(treehouseId, index){
+        var url = 'http://teamtreehouse.com/' + treehouseId + '.json';
+
+        return getJSON(url, function(data){
+          addUserCardToDOM(data);
+          students[index].treehouseData = data;
+        })
+      });
+    });
+
+    function addUserCardToDOM(data){
+      var $target = document.getElementById('cards');
+      var docFragment = createUserCard(data);
+      $target.appendChild(docFragment);
+    }
+
+    function createUserCard(data){
+      var docFragment = document.createDocumentFragment();
+
+      var userCard = document.createElement('div');
+      userCard.setAttribute("class", "user-card");
+      docFragment.appendChild(userCard);
+
+      var img = document.createElement('img');
+      img.setAttribute("src", data.gravatar_url);
+      userCard.appendChild(img);
+
+      var info = document.createElement('div');
+      info.setAttribute("class", "info");
+      userCard.appendChild(info);
+
+      var name = document.createElement('div');
+      name.setAttribute("class", "name");
+      info.appendChild(name);
+      var nameText = document.createTextNode(data.name);
+      name.appendChild(nameText);
+
+      var handle = document.createElement('div');
+      handle.setAttribute("class", "handle");
+      info.appendChild(handle);
+
+      var a = document.createElement('a');
+      a.setAttribute("href", data.profile_url);
+      handle.appendChild(a);
+      var profileNameText = document.createTextNode(data.profile_name);
+      a.appendChild(profileNameText);
+
+      var progress = document.createElement('div');
+      progress.setAttribute("class", "progress");
+      info.appendChild(progress);
+      var progressText = document.createTextNode("55%");
+      progress.appendChild(progressText)
+
+      return docFragment;
+    }
+
+    function getJSON(url, cb){
+      var request = new XMLHttpRequest();
+      request.open('GET', url, true);
+
+      request.onload = function() {
+        if (request.status >= 200 && request.status < 400) {
+          cb(JSON.parse(request.responseText));
+        } else {
+          console.log('We reached the target server, but it returned an error');
+        }
+      };
+
+      request.onerror = function() {
+        console.log('There was a connection error of some sort');
+      };
+
+      request.send();
+    }
+  </script>
+</body>
+</html>
